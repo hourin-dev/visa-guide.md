@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>법률사무소 AI 비자 분석 v1.0.5</title>
+    <title>법률사무소 AI 비자 분석 v1.0.6</title>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
         body { font-family: 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; display: flex; justify-content: center; }
@@ -50,7 +50,7 @@
             <div id="analysis-output"></div>
         </div>
     </div>
-    <div class="version-tag">System Version: 1.0.5 (Stable)</div>
+    <div class="version-tag">System Version: 1.0.6 (Auto-Scan)</div>
 </div>
 
 <script>
@@ -64,23 +64,28 @@ async function runAiAnalysis() {
 
     status.style.display = 'block';
     status.className = 'status-loading';
-    status.innerText = "서버 최적 경로 탐색 중...";
+    status.innerText = "사용 가능한 최적의 모델을 찾는 중입니다...";
     resultBox.style.display = 'none';
 
-    // [v1.0.5 핵심 수정] 모델명을 -latest로 지정하고 순서 재배치
+    // [v1.0.6] 8b 모델 및 최신 규격 추가 (가장 넓은 호환성)
     const endpoints = [
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent",
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
+        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
     ];
 
-    const prompt = `출입국 전문 행정사로서 분석해줘. 비자:${document.getElementById('visaType').value}, 나이:${document.getElementById('age').value}, 연봉:${document.getElementById('income').value}만원, 한국어:${document.getElementById('lang').value}. K-Point 700 점수산정 및 상담전략 포함.`;
+    const prompt = `대한민국 비자 전문가로서 분석하세요. 비자:${document.getElementById('visaType').value}, 나이:${document.getElementById('age').value}, 연봉:${document.getElementById('income').value}만원, 한국어:${document.getElementById('lang').value}. 판정/점수/상담전략 순으로 전문적으로 작성.`;
 
     let success = false;
     let errorLog = [];
 
     for (let url of endpoints) {
         try {
+            const modelName = url.split('models/')[1].split(':')[0];
+            status.innerText = `${modelName} 모델로 접속 시도 중...`;
+            
             const response = await fetch(`${url}?key=${key}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -96,14 +101,14 @@ async function runAiAnalysis() {
                 success = true;
                 break;
             } else if (data.error) {
-                errorLog.push(`${url.split('models/')[1].split(':')[0]}: ${data.error.message}`);
+                errorLog.push(`${modelName}: ${data.error.message}`);
             }
         } catch (e) { errorLog.push(e.message); }
     }
 
     if (!success) {
         status.className = 'status-error';
-        status.innerText = "❌ 모든 경로 접속 실패\n\n상세원인:\n" + errorLog.join('\n');
+        status.innerText = "❌ 모든 모델 탐색 실패\n\n[원인 리스트]\n" + errorLog.join('\n') + "\n\n💡 사무장님, 이 모든 게 안 된다면 구글 계정에서 API를 '새 프로젝트'로 다시 생성해야 할 수도 있습니다.";
     }
 }
 </script>
