@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>법률사무소 - AI 비자 전문 분석 시스템 v1.0.4</title>
+    <title>법률사무소 AI 비자 분석 v1.0.5</title>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
         body { font-family: 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 500px; background: white; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); overflow: hidden; position: relative; }
         .header { background: var(--primary); color: white; padding: 25px; text-align: center; }
-        .header h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
         .content { padding: 25px; padding-bottom: 50px; }
         .api-section { background: #fff9f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffe0b2; }
         label { font-weight: bold; color: #444; font-size: 0.9rem; display: block; margin-bottom: 8px; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; margin-bottom: 15px; }
         .row { display: flex; gap: 10px; }
         button { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #2980b9; }
         #status { display: none; text-align: center; padding: 15px; font-weight: bold; border-radius: 8px; margin-top: 15px; font-size: 0.85rem; }
         .status-loading { background: #e3f2fd; color: #1976d2; }
-        .status-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; white-space: pre-wrap; text-align: left !important; }
+        .status-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; white-space: pre-wrap; text-align: left !important; font-size: 0.8rem; }
         #result-box { margin-top: 25px; display: none; }
         #analysis-output { background: #fdfdfd; padding: 20px; border-radius: 8px; line-height: 1.8; font-size: 1rem; color: #2c3e50; border: 1px solid #eee; border-left: 5px solid var(--accent); white-space: pre-wrap; }
         .version-tag { position: absolute; bottom: 10px; right: 15px; font-size: 0.7rem; color: #aaa; }
@@ -34,38 +32,25 @@
             <label>🔐 시스템 보안 인증키</label>
             <input type="password" id="apiKey" placeholder="AIzaSy... 키를 입력하세요">
         </div>
-
         <label>현재 체류 자격</label>
         <input type="text" id="visaType" value="E-9">
-
         <div class="row">
-            <div style="flex:1">
-                <label>연령 (만)</label>
-                <input type="number" id="age" value="31">
-            </div>
-            <div style="flex:1">
-                <label>연봉 (만원)</label>
-                <input type="number" id="income" value="3300">
-            </div>
+            <div style="flex:1"><label>연령 (만)</label><input type="number" id="age" value="31"></div>
+            <div style="flex:1"><label>연봉 (만원)</label><input type="number" id="income" value="3300"></div>
         </div>
-
         <label>한국어 능력 (TOPIK/KIIP)</label>
         <select id="lang">
-            <option value="2급">2급 (기초)</option>
-            <option value="3급" selected>3급 (보통)</option>
-            <option value="4급">4급 (중급)</option>
-            <option value="5급">5급 (고급)</option>
+            <option value="2급">2급</option><option value="3급" selected>3급</option>
+            <option value="4급">4급</option><option value="5급">5급</option>
         </select>
-
         <button onclick="runAiAnalysis()">전문 분석 리포트 생성</button>
         <div id="status"></div>
-
         <div id="result-box">
             <label>📋 AI 전문가 정밀 진단 결과</label>
             <div id="analysis-output"></div>
         </div>
     </div>
-    <div class="version-tag">System Version: 1.0.4 (Multi-Path)</div>
+    <div class="version-tag">System Version: 1.0.5 (Stable)</div>
 </div>
 
 <script>
@@ -75,30 +60,27 @@ async function runAiAnalysis() {
     const output = document.getElementById('analysis-output');
     const resultBox = document.getElementById('result-box');
 
-    if(!key) { alert('보안 인증키를 입력해 주세요.'); return; }
+    if(!key) { alert('인증키를 입력하세요.'); return; }
 
     status.style.display = 'block';
     status.className = 'status-loading';
-    status.innerText = "최적의 서버 경로를 탐색 중입니다...";
+    status.innerText = "서버 최적 경로 탐색 중...";
     resultBox.style.display = 'none';
 
-    // 사무장님의 환경에 맞는 최적의 경로 후보들
+    // [v1.0.5 핵심 수정] 모델명을 -latest로 지정하고 순서 재배치
     const endpoints = [
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
     ];
 
-    const prompt = `당신은 대한민국 법률사무소의 수석 출입국 전문 행정사입니다. 비자:${document.getElementById('visaType').value}, 나이:${document.getElementById('age').value}, 연봉:${document.getElementById('income').value}만원, 한국어:${document.getElementById('lang').value}. 이 데이터를 바탕으로 K-Point 700 가능성을 분석하고 수임 전략을 제안하세요.`;
+    const prompt = `출입국 전문 행정사로서 분석해줘. 비자:${document.getElementById('visaType').value}, 나이:${document.getElementById('age').value}, 연봉:${document.getElementById('income').value}만원, 한국어:${document.getElementById('lang').value}. K-Point 700 점수산정 및 상담전략 포함.`;
 
     let success = false;
-    let lastError = "";
+    let errorLog = [];
 
     for (let url of endpoints) {
         try {
-            const versionStr = url.includes('v1beta') ? '베타' : '정규';
-            status.innerText = `서버 접속 시도 중... (${versionStr} 채널)`;
-            
             const response = await fetch(`${url}?key=${key}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -112,18 +94,16 @@ async function runAiAnalysis() {
                 status.style.display = 'none';
                 resultBox.style.display = 'block';
                 success = true;
-                break; // 성공 시 루프 탈출
+                break;
             } else if (data.error) {
-                lastError = `[${data.error.status}] ${data.error.message}`;
+                errorLog.push(`${url.split('models/')[1].split(':')[0]}: ${data.error.message}`);
             }
-        } catch (e) {
-            lastError = e.message;
-        }
+        } catch (e) { errorLog.push(e.message); }
     }
 
     if (!success) {
         status.className = 'status-error';
-        status.innerText = `❌ 모든 경로 접속 실패\n\n최종 에러 원인:\n${lastError}\n\n사무장님, 이 메시지가 보인다면 구글 클라우드 콘솔에서 'Generative Language API'가 '사용 설정(Enable)' 되어 있는지 다시 한번 확인이 필요합니다.`;
+        status.innerText = "❌ 모든 경로 접속 실패\n\n상세원인:\n" + errorLog.join('\n');
     }
 }
 </script>
