@@ -3,97 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>법률사무소 - 지능형 비자 분석 시스템</title>
+    <title>법률사무소 - AI 비자 전문 분석 시스템</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; }
-        body { font-family: 'Malgun Gothic', sans-serif; background: #eaeff2; padding: 20px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 500px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
-        .header { background: var(--primary); color: white; padding: 20px; text-align: center; }
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
+        body { font-family: 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 500px; background: white; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); overflow: hidden; }
+        .header { background: var(--primary); color: white; padding: 25px; text-align: center; }
+        .header h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
         .content { padding: 25px; }
-        .api-section { background: #fff4e5; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #ffcc80; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; margin-top: 5px; }
-        .input-group { margin-bottom: 15px; }
-        label { font-weight: bold; color: #555; font-size: 0.85rem; }
-        button { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        #result-box { margin-top: 25px; display: none; border-top: 2px solid #eee; padding-top: 20px; }
-        #analysis-output { background: #f8f9fa; padding: 15px; border-radius: 6px; line-height: 1.6; font-size: 0.95rem; color: #333; border-left: 4px solid var(--accent); white-space: pre-wrap; }
-        .status-msg { text-align: center; display: none; color: #e67e22; font-weight: bold; padding: 10px; font-size: 0.9rem; }
+        .api-section { background: #fff9f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffe0b2; }
+        label { font-weight: bold; color: #444; font-size: 0.9rem; display: block; margin-bottom: 8px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; margin-bottom: 15px; transition: border 0.3s; }
+        input:focus { border-color: var(--accent); outline: none; }
+        .row { display: flex; gap: 10px; }
+        button { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background: #2980b9; }
+        #status { display: none; text-align: center; padding: 15px; font-weight: bold; border-radius: 8px; margin-top: 15px; font-size: 0.9rem; }
+        .status-loading { background: #e3f2fd; color: #1976d2; }
+        .status-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        #result-box { margin-top: 25px; display: none; animation: fadeIn 0.5s; }
+        #analysis-output { background: #fdfdfd; padding: 20px; border-radius: 8px; line-height: 1.8; font-size: 1rem; color: #2c3e50; border: 1px solid #eee; border-left: 5px solid var(--accent); white-space: pre-wrap; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header"><h1>VISA ANALYSIS SYSTEM</h1></div>
+    <div class="header"><h1>VISA ANALYSIS AI</h1></div>
     <div class="content">
         <div class="api-section">
-            <label>시스템 보안 인증키</label>
-            <input type="password" id="apiKey" placeholder="AIza... 키를 입력하세요">
+            <label>🔐 시스템 보안 인증키</label>
+            <input type="password" id="apiKey" placeholder="AIzaSy... 로 시작하는 키를 입력하세요">
         </div>
-        <div class="input-group"><label>현재 비자</label><input type="text" id="visaType" value="E-9"></div>
-        <div class="input-group"><label>연령 / 연봉(만원)</label>
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="age" value="30">
-                <input type="number" id="income" value="3000">
+
+        <label>현재 체류 자격</label>
+        <input type="text" id="visaType" value="E-9">
+
+        <div class="row">
+            <div style="flex:1">
+                <label>연령 (만)</label>
+                <input type="number" id="age" value="31">
             </div>
-        </div>
-        <div class="input-group">
-            <label>한국어 능력</label>
-            <select id="lang">
-                <option value="3급">3급</option><option value="4급">4급</option>
-                <option value="2급">2급</option><option value="5급">5급</option>
-            </select>
-        </div>
-        <button onclick="smartAnalyze()">지능형 분석 가동</button>
-        <div id="status" class="status-msg"></div>
-        <div id="result-box">
-            <div id="analysis-output"></div>
-        </div>
-    </div>
-</div>
-
-<script>
-async function smartAnalyze() {
-    const key = document.getElementById('apiKey').value.trim();
-    if(!key) return alert('키를 입력하세요.');
-
-    const status = document.getElementById('status');
-    const output = document.getElementById('analysis-output');
-    const resultBox = document.getElementById('result-box');
-
-    status.innerText = "서버 경로 탐색 중...";
-    status.style.display = 'block';
-    resultBox.style.display = 'none';
-
-    // 사무장님이 겪으신 모든 오류 후보들을 순차적으로 테스트합니다.
-    const models = [
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
-    ];
-
-    const prompt = `출입국 비자 전문가로서 분석해줘. 비자:${document.getElementById('visaType').value}, 나이:${document.getElementById('age').value}, 연봉:${document.getElementById('income').value}, 한국어:${document.getElementById('lang').value}. 판정/점수/팁 순으로.`;
-
-    for (let url of models) {
-        try {
-            status.innerText = `경로 확인 중... (${url.includes('v1beta') ? '베타' : '정규'} 채널)`;
-            const response = await fetch(`${url}?key=${key}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-
-            const data = await response.json();
-            if (data.candidates && data.candidates[0].content) {
-                output.innerText = data.candidates[0].content.parts[0].text;
-                status.style.display = 'none';
-                resultBox.style.display = 'block';
-                return; // 성공 시 종료
-            }
-        } catch (e) { console.log("Next model try..."); }
-    }
-
-    status.innerText = "모든 서버 경로가 응답하지 않습니다. API 키 설정을 확인해주세요.";
-}
-</script>
-</body>
-</html>
+            <div style="flex:1">
+                <label>연봉 (만원)</label>
+                <input type="number" id="income" value
