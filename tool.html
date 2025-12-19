@@ -3,27 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>법률사무소 - AI 비자 전문 분석 시스템</title>
+    <title>법률사무소 - AI 비자 전문 분석 시스템 v1.0.4</title>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
         body { font-family: 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 500px; background: white; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); overflow: hidden; }
+        .app-container { width: 100%; max-width: 500px; background: white; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); overflow: hidden; position: relative; }
         .header { background: var(--primary); color: white; padding: 25px; text-align: center; }
         .header h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
-        .content { padding: 25px; }
+        .content { padding: 25px; padding-bottom: 50px; }
         .api-section { background: #fff9f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffe0b2; }
         label { font-weight: bold; color: #444; font-size: 0.9rem; display: block; margin-bottom: 8px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; margin-bottom: 15px; transition: border 0.3s; }
-        input:focus { border-color: var(--accent); outline: none; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; margin-bottom: 15px; }
         .row { display: flex; gap: 10px; }
-        button { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         button:hover { background: #2980b9; }
-        #status { display: none; text-align: center; padding: 15px; font-weight: bold; border-radius: 8px; margin-top: 15px; font-size: 0.9rem; }
+        #status { display: none; text-align: center; padding: 15px; font-weight: bold; border-radius: 8px; margin-top: 15px; font-size: 0.85rem; }
         .status-loading { background: #e3f2fd; color: #1976d2; }
-        .status-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; white-space: pre-wrap; word-break: break-all; }
-        #result-box { margin-top: 25px; display: none; animation: fadeIn 0.5s; }
+        .status-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; white-space: pre-wrap; text-align: left !important; }
+        #result-box { margin-top: 25px; display: none; }
         #analysis-output { background: #fdfdfd; padding: 20px; border-radius: 8px; line-height: 1.8; font-size: 1rem; color: #2c3e50; border: 1px solid #eee; border-left: 5px solid var(--accent); white-space: pre-wrap; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .version-tag { position: absolute; bottom: 10px; right: 15px; font-size: 0.7rem; color: #aaa; }
     </style>
 </head>
 <body>
@@ -33,7 +32,7 @@
     <div class="content">
         <div class="api-section">
             <label>🔐 시스템 보안 인증키</label>
-            <input type="password" id="apiKey" placeholder="AIzaSy... 로 시작하는 키를 입력하세요">
+            <input type="password" id="apiKey" placeholder="AIzaSy... 키를 입력하세요">
         </div>
 
         <label>현재 체류 자격</label>
@@ -59,7 +58,6 @@
         </select>
 
         <button onclick="runAiAnalysis()">전문 분석 리포트 생성</button>
-
         <div id="status"></div>
 
         <div id="result-box">
@@ -67,6 +65,7 @@
             <div id="analysis-output"></div>
         </div>
     </div>
+    <div class="version-tag">System Version: 1.0.4 (Multi-Path)</div>
 </div>
 
 <script>
@@ -76,59 +75,57 @@ async function runAiAnalysis() {
     const output = document.getElementById('analysis-output');
     const resultBox = document.getElementById('result-box');
 
-    if(!key) {
-        alert('보안 인증키를 입력해 주세요.');
-        return;
-    }
+    if(!key) { alert('보안 인증키를 입력해 주세요.'); return; }
 
     status.style.display = 'block';
     status.className = 'status-loading';
-    status.innerText = "구글 AI 엔진에 접속 중입니다. 잠시만 기다려 주세요...";
+    status.innerText = "최적의 서버 경로를 탐색 중입니다...";
     resultBox.style.display = 'none';
 
-    const prompt = `당신은 대한민국 법률사무소의 수석 출입국 전문 행정사입니다.
-    다음 의뢰인의 정보를 바탕으로 숙련기능인력(K-Point 700) 비자 변경 가능성을 정밀 분석하세요.
+    // 사무장님의 환경에 맞는 최적의 경로 후보들
+    const endpoints = [
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    ];
 
-    [의뢰인 정보]
-    - 현재비자: ${document.getElementById('visaType').value}
-    - 연령: 만 ${document.getElementById('age').value}세
-    - 연간소득: ${document.getElementById('income').value}만원
-    - 한국어능력: ${document.getElementById('lang').value}
+    const prompt = `당신은 대한민국 법률사무소의 수석 출입국 전문 행정사입니다. 비자:${document.getElementById('visaType').value}, 나이:${document.getElementById('age').value}, 연봉:${document.getElementById('income').value}만원, 한국어:${document.getElementById('lang').value}. 이 데이터를 바탕으로 K-Point 700 가능성을 분석하고 수임 전략을 제안하세요.`;
 
-    사무장님이 의뢰인에게 바로 보여줄 수 있도록 전문적인 리포트 형식으로 작성해 주세요.`;
+    let success = false;
+    let lastError = "";
 
-    try {
-        // [핵심 변경] v1beta 경로 + gemini-pro 모델 조합 (가장 범용성이 높음)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
+    for (let url of endpoints) {
+        try {
+            const versionStr = url.includes('v1beta') ? '베타' : '정규';
+            status.innerText = `서버 접속 시도 중... (${versionStr} 채널)`;
+            
+            const response = await fetch(`${url}?key=${key}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        if (data.error) {
-            status.className = 'status-error';
-            status.innerText = `❌ 오류 발생: ${data.error.message}\n(코드: ${data.error.status})`;
-            return;
+            if (data.candidates && data.candidates[0].content) {
+                output.innerText = data.candidates[0].content.parts[0].text;
+                status.style.display = 'none';
+                resultBox.style.display = 'block';
+                success = true;
+                break; // 성공 시 루프 탈출
+            } else if (data.error) {
+                lastError = `[${data.error.status}] ${data.error.message}`;
+            }
+        } catch (e) {
+            lastError = e.message;
         }
+    }
 
-        if (data.candidates && data.candidates[0].content) {
-            output.innerText = data.candidates[0].content.parts[0].text;
-            status.style.display = 'none';
-            resultBox.style.display = 'block';
-        } else {
-            throw new Error("응답 형식이 예상과 다릅니다.");
-        }
-
-    } catch (e) {
+    if (!success) {
         status.className = 'status-error';
-        status.innerText = "❌ 연결 실패: 네트워크 상태나 API 주소를 확인해 주세요.";
+        status.innerText = `❌ 모든 경로 접속 실패\n\n최종 에러 원인:\n${lastError}\n\n사무장님, 이 메시지가 보인다면 구글 클라우드 콘솔에서 'Generative Language API'가 '사용 설정(Enable)' 되어 있는지 다시 한번 확인이 필요합니다.`;
     }
 }
 </script>
-
 </body>
 </html>
