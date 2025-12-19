@@ -3,98 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>법률사무소 - 비자 분석 시스템 v1.7</title>
+    <title>법률사무소 - 지능형 비자 분석 시스템</title>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; }
-        body { font-family: 'Malgun Gothic', sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
-        .header { background: var(--primary); color: white; padding: 25px; text-align: center; }
-        .content { padding: 30px; }
+        body { font-family: 'Malgun Gothic', sans-serif; background: #eaeff2; padding: 20px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 500px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: var(--primary); color: white; padding: 20px; text-align: center; }
+        .content { padding: 25px; }
+        .api-section { background: #fff4e5; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #ffcc80; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; margin-top: 5px; }
         .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; font-size: 0.85rem; }
-        input, select { width: 100%; padding: 12px; border: 1.5px solid #dce4ec; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        .api-section { background: #fff9db; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #fab005; }
-        button { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        label { font-weight: bold; color: #555; font-size: 0.85rem; }
+        button { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
         #result-box { margin-top: 25px; display: none; border-top: 2px solid #eee; padding-top: 20px; }
-        #analysis-output { background: #f8f9fa; padding: 20px; border-radius: 10px; line-height: 1.8; font-size: 1rem; color: #2c3e50; border-left: 5px solid var(--accent); white-space: pre-wrap; }
-        .loading { text-align: center; display: none; color: var(--accent); font-weight: bold; padding: 20px; }
+        #analysis-output { background: #f8f9fa; padding: 15px; border-radius: 6px; line-height: 1.6; font-size: 0.95rem; color: #333; border-left: 4px solid var(--accent); white-space: pre-wrap; }
+        .status-msg { text-align: center; display: none; color: #e67e22; font-weight: bold; padding: 10px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header"><h1>IMMIGRATION ANALYZER</h1></div>
+    <div class="header"><h1>VISA ANALYSIS SYSTEM</h1></div>
     <div class="content">
         <div class="api-section">
-            <label>시스템 인증키 (API KEY)</label>
-            <input type="password" id="apiKey" placeholder="인증키를 입력하세요">
+            <label>시스템 보안 인증키</label>
+            <input type="password" id="apiKey" placeholder="AIza... 키를 입력하세요">
         </div>
         <div class="input-group"><label>현재 비자</label><input type="text" id="visaType" value="E-9"></div>
-        <div class="input-group"><label>신청인 연령</label><input type="number" id="age" value="30"></div>
-        <div class="input-group"><label>연간 소득(만원)</label><input type="number" id="income" value="3000"></div>
+        <div class="input-group"><label>연령 / 연봉(만원)</label>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="age" value="30">
+                <input type="number" id="income" value="3000">
+            </div>
+        </div>
         <div class="input-group">
             <label>한국어 능력</label>
             <select id="lang">
-                <option value="3급">3급 (사회통합 3단계)</option>
-                <option value="4급">4급 (사회통합 4단계)</option>
-                <option value="2급">2급 (사회통합 2단계)</option>
-                <option value="5급 이상">5급 이상</option>
+                <option value="3급">3급</option><option value="4급">4급</option>
+                <option value="2급">2급</option><option value="5급">5급</option>
             </select>
         </div>
-        <button onclick="startAnalysis()">실시간 분석 실행</button>
-        <div id="loading" class="loading">중앙 서버 데이터 대조 중...</div>
+        <button onclick="smartAnalyze()">지능형 분석 가동</button>
+        <div id="status" class="status-msg"></div>
         <div id="result-box">
-            <div style="font-weight:bold; margin-bottom:15px;">🔍 분석 결과 리포트</div>
             <div id="analysis-output"></div>
         </div>
     </div>
 </div>
 
 <script>
-async function startAnalysis() {
+async function smartAnalyze() {
     const key = document.getElementById('apiKey').value.trim();
-    if(!key) { alert('인증키를 입력해주세요.'); return; }
+    if(!key) return alert('키를 입력하세요.');
 
-    const loading = document.getElementById('loading');
-    const resultBox = document.getElementById('result-box');
+    const status = document.getElementById('status');
     const output = document.getElementById('analysis-output');
+    const resultBox = document.getElementById('result-box');
 
-    loading.style.display = 'block';
+    status.innerText = "서버 경로 탐색 중...";
+    status.style.display = 'block';
     resultBox.style.display = 'none';
 
-    const promptText = `너는 출입국 전문 사무장의 비서야. 아래 정보로 K-point 700과 F-2-R 가능성을 분석해줘.
-    [데이터] 비자: ${document.getElementById('visaType').value}, 나이: ${document.getElementById('age').value}, 연봉: ${document.getElementById('income').value}만원, 한국어: ${document.getElementById('lang').value}`;
+    // 사무장님이 겪으신 모든 오류 후보들을 순차적으로 테스트합니다.
+    const models = [
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    ];
 
-    try {
-        // [긴급 수정] v1beta와 gemini-1.5-flash를 가장 원시적인(Raw) 경로로 조합
-        // URL 형식을 구글 공식 API Explorer와 동일하게 맞춤
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }] }]
-            })
-        });
+    const prompt = `출입국 비자 전문가로서 분석해줘. 비자:${document.getElementById('visaType').value}, 나이:${document.getElementById('age').value}, 연봉:${document.getElementById('income').value}, 한국어:${document.getElementById('lang').value}. 판정/점수/팁 순으로.`;
 
-        const resData = await response.json();
+    for (let url of models) {
+        try {
+            status.innerText = `경로 확인 중... (${url.includes('v1beta') ? '베타' : '정규'} 채널)`;
+            const response = await fetch(`${url}?key=${key}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
 
-        // 만약 v1beta에서 실패할 경우를 대비한 2차 시도 로직 (v1)
-        if (resData.error && resData.error.status === "NOT_FOUND") {
-             throw new Error("서버 경로를 찾을 수 없습니다. (NOT_FOUND)");
-        }
-
-        const text = resData.candidates[0].content.parts[0].text;
-        loading.style.display = 'none';
-        resultBox.style.display = 'block';
-        output.innerText = text;
-
-    } catch (error) {
-        loading.style.display = 'none';
-        // 최종 수단: 사용자에게 더 구체적인 안내를 함
-        alert('분석 오류: ' + error.message + '\n\n만약 NOT_FOUND가 계속된다면, 구글 API 키 생성 시 모델 선택이 잘못되었을 수 있습니다.');
+            const data = await response.json();
+            if (data.candidates && data.candidates[0].content) {
+                output.innerText = data.candidates[0].content.parts[0].text;
+                status.style.display = 'none';
+                resultBox.style.display = 'block';
+                return; // 성공 시 종료
+            }
+        } catch (e) { console.log("Next model try..."); }
     }
+
+    status.innerText = "모든 서버 경로가 응답하지 않습니다. API 키 설정을 확인해주세요.";
 }
 </script>
 </body>
