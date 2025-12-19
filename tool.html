@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>법률사무소 - 비자 분석 시스템 v1.1</title>
+    <title>법률사무소 - 비자 분석 시스템 v1.2</title>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; }
         body { font-family: 'Malgun Gothic', sans-serif; background: #eaeff2; padding: 20px; display: flex; justify-content: center; }
@@ -42,10 +42,10 @@
                 <option value="5급">5급</option>
             </select>
         </div>
-        <button onclick="startAnalysis()">분석 가동</button>
+        <button onclick="startAnalysis()">시뮬레이션 가동</button>
         <div id="loading" class="loading">데이터 분석 중... 잠시만 기다려 주세요.</div>
         <div id="result-box">
-            <div style="font-weight:bold; margin-bottom:10px;">🔍 분석 보고서</div>
+            <div style="font-weight:bold; margin-bottom:10px;">🔍 전문가 분석 보고서</div>
             <div id="analysis-output"></div>
         </div>
     </div>
@@ -63,23 +63,38 @@ async function startAnalysis() {
     loading.style.display = 'block';
     resultBox.style.display = 'none';
 
-    const prompt = `너는 법률사무소 사무장의 출입국 비자 전문 비서야. 다음 정보를 바탕으로 K-point 700과 F-2-R 가능성을 정밀 분석해줘. [정보] 현재비자: ${document.getElementById('visaType').value}, 나이: ${document.getElementById('age').value}, 연봉: ${document.getElementById('income').value}만원, 한국어: ${document.getElementById('lang').value}`;
+    // 의뢰인 데이터 수집
+    const visa = document.getElementById('visaType').value;
+    const age = document.getElementById('age').value;
+    const income = document.getElementById('income').value;
+    const lang = document.getElementById('lang').value;
+
+    const prompt = `너는 법률사무소 사무장의 출입국 비자 전문 비서야. 아래 정보를 바탕으로 K-point 700과 F-2-R 가능성을 정밀 분석해줘.
+    [의뢰인 정보] 현재비자: ${visa}, 나이: ${age}, 연봉: ${income}만원, 한국어: ${lang}
+    [답변 양식]
+    1. 종합 판정 (가능/보완/불가)
+    2. 주요 지표 분석 (점수 추정 등)
+    3. 사무장 상담 팁 (사장님 설득 및 의뢰인 관리)
+    4. 법률 리스크 및 보완사항`;
 
     try {
-        // 모델명을 가장 보편적인 gemini-1.5-flash로 고정
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+        // v1beta 대신 v1 사용, 모델명을 gemini-1.5-flash-latest로 구체화
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
         
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            })
         });
 
         const data = await response.json();
 
         if (data.error) {
-            // 구글 서버에서 보낸 에러 메시지를 직접 출력 (원인 파악용)
-            throw new Error(`[구글 에러] ${data.error.message} (코드: ${data.error.status})`);
+            throw new Error(`${data.error.message} (${data.error.status})`);
         }
 
         const text = data.candidates[0].content.parts[0].text;
@@ -89,7 +104,7 @@ async function startAnalysis() {
 
     } catch (error) {
         loading.style.display = 'none';
-        alert('오류 발생: ' + error.message);
+        alert('시스템 분석 오류: ' + error.message);
         console.error(error);
     }
 }
